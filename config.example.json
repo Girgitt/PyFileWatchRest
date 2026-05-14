@@ -29,7 +29,7 @@
   "purge_processing_after_each_attempt": true,
   "observer_type": "native",
   "polling_interval_seconds": 2.0,
-  "log_file": "logs/filewatchrestpy.log",
+  "log_file": "logs/pyfilewatchrest.log",
   "log_level": "DEBUG",
   "log_retained_days": 14,
   "memory_restart_mb": 128
