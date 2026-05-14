@@ -12,7 +12,7 @@ set "CONFIG=%APP_DIR%\config.json"
 
 nssm install "%SERVICE_NAME%" "%APP_EXE%" "--config" "%CONFIG%"
 nssm set "%SERVICE_NAME%" AppDirectory "%APP_DIR%"
-nssm set "%SERVICE_NAME%" DisplayName "FileWatchRestPy"
+nssm set "%SERVICE_NAME%" DisplayName "PyFileWatchRest"
 nssm set "%SERVICE_NAME%" Description "Two-stage watch directory and POST new or modified files to REST endpoint"
 nssm set "%SERVICE_NAME%" Start SERVICE_AUTO_START
 
