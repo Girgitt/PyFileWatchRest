@@ -69,6 +69,10 @@ config.example.json -> C:\opt\PyFileWatchRest\config.json
 
 ## Install with NSSM
 
+The bundled `nssm.exe` binary is NSSM v2.24 and comes from:
+
+- https://github.com/HandSonic/nssm/releases
+
 Edit `install_service.cmd` paths, then run it from an Administrator command prompt.
 
 Typical command form:
