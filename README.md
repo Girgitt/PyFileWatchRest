@@ -43,7 +43,7 @@ python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 copy config.example.json config.json
-python filewatchrest_min.py --config config.json
+python filewatchrest_main.py --config config.json
 ```
 
 ## Build with cx_Freeze
@@ -69,7 +69,7 @@ config.example.json -> C:\opt\FileWatchRestPy\config.json
 
 ## Install with NSSM
 
-Edit `install_nssm.cmd` paths, then run it from an Administrator command prompt.
+Edit `install_service.cmd` paths, then run it from an Administrator command prompt.
 
 Typical command form:
 
@@ -80,9 +80,49 @@ nssm set FileWatchRestPy AppExit Default Restart
 nssm start FileWatchRestPy
 ```
 
+## Endpoint configuration
+
+The `endpoint` setting is the target URL used for outgoing POST requests.
+
+Example:
+
+```json
+{
+  "endpoint": "http://localhost:8080/api/files"
+}
+```
+
+### Authentication
+
+Bearer token auth is supported with `bearer_token`:
+
+```json
+{
+  "endpoint": "https://server.com/api/files",
+  "bearer_token": "your-token"
+}
+```
+
+HTTP Basic Auth is also supported by embedding credentials in the endpoint URL:
+
+```json
+{
+  "endpoint": "https://user:pass@server.com/api/files"
+}
+```
+
+Notes:
+
+- embedded endpoint credentials are converted to HTTP Basic Auth
+- the request is sent using a sanitized URL without credentials in the URL string
+- if both endpoint credentials and an explicit `Authorization` header or `bearer_token` are configured, the explicit authorization takes precedence
+- if your username or password contains special characters such as `@`, `:`, or `/`, percent-encode them in the URL
+
 ## Upload format
 
-Default in this package is JSON mode:
+The default example configuration in this repository uses JSON mode (`"upload_mode": "json"`).
+
+In JSON mode, the POST body looks like this:
 
 ```json
 {

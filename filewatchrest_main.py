@@ -40,6 +40,7 @@ from datetime import datetime
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 from typing import Optional
+from urllib.parse import urlsplit, urlunsplit
 
 import requests
 from watchdog.events import FileSystemEventHandler
@@ -259,6 +260,23 @@ class RestPoster:
     def __init__(self, cfg: Config):
         self.cfg = cfg
         self.session = requests.Session()
+        self.endpoint, self.basic_auth = self._parse_endpoint_auth(cfg.endpoint)
+
+    @staticmethod
+    def _parse_endpoint_auth(endpoint: str) -> tuple[str, Optional[tuple[str, str]]]:
+        parts = urlsplit(endpoint)
+        if parts.username is None:
+            return endpoint, None
+
+        host = parts.hostname or ""
+        if ":" in host and not host.startswith("["):
+            host = f"[{host}]"
+        if parts.port is not None:
+            host = f"{host}:{parts.port}"
+
+        sanitized_endpoint = urlunsplit((parts.scheme, host, parts.path, parts.query, parts.fragment))
+        password = parts.password or ""
+        return sanitized_endpoint, (parts.username, password)
 
     def post_file(self, processing_path: Path, original_path: Path) -> bool:
         try:
@@ -284,6 +302,10 @@ class RestPoster:
                 token = token[7:].strip()
             headers["Authorization"] = f"Bearer {token}"
 
+        auth = None if "Authorization" in headers else self.basic_auth
+        if self.basic_auth and "Authorization" in headers:
+            logging.warning("endpoint contains basic auth credentials but Authorization header is already set; using Authorization header")
+
         for attempt in range(1, self.cfg.retry_count + 1):
             try:
                 if self.cfg.post_file_contents:
@@ -302,9 +324,10 @@ class RestPoster:
                                 ),
                             }
                             r = self.session.post(
-                                self.cfg.endpoint,
+                                self.endpoint,
                                 files=files,
                                 headers=headers,
+                                auth=auth,
                                 timeout=self.cfg.request_timeout_seconds,
                             )
                     else:
@@ -312,16 +335,18 @@ class RestPoster:
                         data = dict(meta)
                         data["content"] = processing_path.read_text(encoding="utf-8", errors="replace")
                         r = self.session.post(
-                            self.cfg.endpoint,
+                            self.endpoint,
                             json=data,
                             headers=headers,
+                            auth=auth,
                             timeout=self.cfg.request_timeout_seconds,
                         )
                 else:
                     r = self.session.post(
-                        self.cfg.endpoint,
+                        self.endpoint,
                         json=meta,
                         headers=headers,
+                        auth=auth,
                         timeout=self.cfg.request_timeout_seconds,
                     )
 
