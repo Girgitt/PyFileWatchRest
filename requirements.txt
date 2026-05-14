@@ -1,0 +1,5 @@
+watchdog>=4
+requests>=2
+cx_Freeze>=7
+psutil>=7
+
