@@ -8,6 +8,8 @@ build_exe_options = {
     ],
     "include_files": [
         ("config.example.json", "config.example.json"),
+        ("nssm.exe", "nssm.exe"),
+        ("install_service.cmd", "install_service.cmd")
     ],
     "include_msvcr": True,
     "excludes": [
@@ -24,7 +26,7 @@ setup(
     executables=[
         Executable(
             script="filewatchrest_main.py",
-            target_name="FileWatchRestPy.exe",
+            target_name="PyFileWatchRest.exe",
             base=None,
         )
     ],

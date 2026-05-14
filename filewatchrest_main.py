@@ -91,7 +91,7 @@ class Config:
     observer_type: str = "native"  # native or polling
     polling_interval_seconds: float = 2.0
 
-    log_file: Path = Path("logs/filewatchrestpy.log")
+    log_file: Path = Path("logs/pyfilewatchrest.log")
     log_level: str = "INFO"
     log_retained_days: int = 14
     
