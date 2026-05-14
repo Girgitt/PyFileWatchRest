@@ -1,4 +1,4 @@
-# FileWatchRestPy two-stage minimal
+# PyFileWatchRest
 
 Minimal Python watcher which posts new or modified files to a REST endpoint.
 
@@ -53,18 +53,18 @@ pip install -r requirements.txt
 python setup.py build
 ```
 
-The executable will be under `build\exe.*\FileWatchRestPy.exe`.
+The executable will be under `build\exe.*\PyFileWatchRest.exe`.
 
 Copy the whole `build\exe.*` directory to something like:
 
 ```text
-C:\opt\FileWatchRestPy
+C:\opt\PyFileWatchRest
 ```
 
 Then copy/edit:
 
 ```text
-config.example.json -> C:\opt\FileWatchRestPy\config.json
+config.example.json -> C:\opt\PyFileWatchRest\config.json
 ```
 
 ## Install with NSSM
@@ -74,10 +74,10 @@ Edit `install_service.cmd` paths, then run it from an Administrator command prom
 Typical command form:
 
 ```cmd
-nssm install FileWatchRestPy "C:\opt\FileWatchRestPy\FileWatchRestPy.exe" "--config" "C:\opt\FileWatchRestPy\config.json"
-nssm set FileWatchRestPy AppDirectory "C:\opt\FileWatchRestPy"
-nssm set FileWatchRestPy AppExit Default Restart
-nssm start FileWatchRestPy
+nssm install PyFileWatchRest "C:\opt\PyFileWatchRest\PyFileWatchRest.exe" "--config" "C:\opt\PyFileWatchRest\config.json"
+nssm set PyFileWatchRest AppDirectory "C:\opt\PyFileWatchRest"
+nssm set PyFileWatchRest AppExit Default Restart
+nssm start PyFileWatchRest
 ```
 
 ## Endpoint configuration
