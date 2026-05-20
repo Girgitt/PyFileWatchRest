@@ -351,7 +351,7 @@ class RestPoster:
                     )
 
                 if 200 <= r.status_code < 300:
-                    logging.info("posted original=%s processing=%s status=%s", original_path, processing_path, r.status_code)
+                    logging.info("posted original=%s endpoint=%s status=%s", original_path, self.endpoint, r.status_code)
                     return True
 
                 logging.warning(
