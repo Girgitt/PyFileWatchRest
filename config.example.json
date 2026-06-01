@@ -2,7 +2,12 @@
   "watch_dir": "C:\\temp\\watch",
   "endpoint": "http://localhost:8080/api/files",
   "allowed_extensions": [
-    ".csv"
+    ".csv",
+    ".xlsx"
+  ],
+  "include_patterns": [
+    "report_*.csv",
+    "report_*.xlsx"
   ],
   "exclude_patterns": [],
   "include_subdirectories": false,
@@ -10,6 +15,15 @@
   "startup_scan": true,
   "post_file_contents": true,
   "upload_mode": "json",
+  "json_text_extensions": [
+    ".csv",
+    ".txt",
+    ".json",
+    ".xml"
+  ],
+  "json_text_encoding": "utf-8",
+  "json_text_read_errors": "replace",
+  "json_binary_encoding": "base64",
   "headers": {},
   "bearer_token": null,
   "retry_count": 3,

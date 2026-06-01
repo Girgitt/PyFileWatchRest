@@ -96,6 +96,27 @@ Example:
 }
 ```
 
+### File selection
+
+You can narrow which files are processed using:
+
+- `allowed_extensions`: extension filter such as `.csv` or `.xlsx`
+- `include_patterns`: filename allow-list patterns using shell-style `*` and `?`
+- `exclude_patterns`: filename deny-list patterns using shell-style `*` and `?`
+
+`include_patterns` is matched against the filename only, not the full path. If it is non-empty, a
+file must match at least one include pattern to be processed.
+
+Example:
+
+```json
+{
+  "allowed_extensions": [".csv", ".xlsx"],
+  "include_patterns": ["report_*.csv", "report_*.xlsx"],
+  "exclude_patterns": ["*.tmp", "~$*"]
+}
+```
+
 ### Authentication
 
 Bearer token auth is supported with `bearer_token`:
@@ -125,6 +146,8 @@ Notes:
 ## Upload format
 
 The default example configuration in this repository uses JSON mode (`"upload_mode": "json"`).
+In JSON mode, extensions listed in `json_text_extensions` are sent as text and all other files are
+sent as base64-encoded binary.
 
 In JSON mode, the POST body looks like this:
 
@@ -136,7 +159,21 @@ In JSON mode, the POST body looks like this:
   "last_write_time": "2026-05-13T15:10:20.123456",
   "processing_path": "C:\\temp\\watch\\processing\\20260513_151020_123456_ab12cd34_file.csv",
   "claimed_at": "2026-05-13T15:10:21.123456",
+  "content_kind": "text",
+  "content_encoding": "utf-8",
   "content": "file content here"
+}
+```
+
+For binary files such as `.xlsx`, the JSON body contains:
+
+```json
+{
+  "filename": "report.xlsx",
+  "size": 48123,
+  "content_kind": "binary",
+  "content_encoding": "base64",
+  "content": "UEsDB..."
 }
 ```
 

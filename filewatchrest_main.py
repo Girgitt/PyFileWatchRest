@@ -22,6 +22,7 @@ Dependencies:
 from __future__ import annotations
 
 import argparse
+import base64
 import fnmatch
 import json
 import logging
@@ -54,6 +55,7 @@ class Config:
     endpoint: str
 
     allowed_extensions: list[str] = field(default_factory=list)
+    include_patterns: list[str] = field(default_factory=list)
     exclude_patterns: list[str] = field(default_factory=list)
     include_subdirectories: bool = False
 
@@ -62,6 +64,10 @@ class Config:
 
     post_file_contents: bool = True
     upload_mode: str = "multipart"  # multipart or json
+    json_text_extensions: list[str] = field(default_factory=list)
+    json_text_encoding: str = "utf-8"
+    json_text_read_errors: str = "replace"  # strict / replace / ignore
+    json_binary_encoding: str = "base64"  # currently only base64
     headers: dict[str, str] = field(default_factory=dict)
     bearer_token: Optional[str] = None
 
@@ -138,9 +144,22 @@ def load_config(path: Path) -> Config:
         for ext in cfg.allowed_extensions
     ]
 
+    cfg.json_text_extensions = [
+        ext.lower() if ext.startswith(".") else "." + ext.lower()
+        for ext in cfg.json_text_extensions
+    ]
+
     cfg.upload_mode = cfg.upload_mode.lower().strip()
     if cfg.upload_mode not in {"multipart", "json"}:
         raise ValueError("upload_mode must be 'multipart' or 'json'")
+
+    cfg.json_binary_encoding = cfg.json_binary_encoding.lower().strip()
+    if cfg.json_binary_encoding not in {"base64"}:
+        raise ValueError("json_binary_encoding must be 'base64'")
+
+    cfg.json_text_read_errors = cfg.json_text_read_errors.lower().strip()
+    if cfg.json_text_read_errors not in {"strict", "replace", "ignore"}:
+        raise ValueError("json_text_read_errors must be 'strict', 'replace', or 'ignore'")
 
     cfg.observer_type = cfg.observer_type.lower().strip()
     if cfg.observer_type not in {"native", "polling"}:
@@ -278,6 +297,27 @@ class RestPoster:
         password = parts.password or ""
         return sanitized_endpoint, (parts.username, password)
 
+    def _is_json_text_file(self, path: Path) -> bool:
+        return path.suffix.lower() in self.cfg.json_text_extensions
+
+    def _build_json_payload(self, processing_path: Path, meta: dict) -> dict:
+        data = dict(meta)
+
+        if self._is_json_text_file(processing_path):
+            data["content_kind"] = "text"
+            data["content_encoding"] = self.cfg.json_text_encoding
+            data["content"] = processing_path.read_text(
+                encoding=self.cfg.json_text_encoding,
+                errors=self.cfg.json_text_read_errors,
+            )
+        else:
+            raw = processing_path.read_bytes()
+            data["content_kind"] = "binary"
+            data["content_encoding"] = self.cfg.json_binary_encoding
+            data["content"] = base64.b64encode(raw).decode("ascii")
+
+        return data
+
     def post_file(self, processing_path: Path, original_path: Path) -> bool:
         try:
             st = processing_path.stat()
@@ -331,9 +371,9 @@ class RestPoster:
                                 timeout=self.cfg.request_timeout_seconds,
                             )
                     else:
-                        # JSON mode reads the file into memory. Use only for small/text files.
-                        data = dict(meta)
-                        data["content"] = processing_path.read_text(encoding="utf-8", errors="replace")
+                        # JSON mode reads the file into memory.
+                        # Selected extensions are sent as text; everything else is base64.
+                        data = self._build_json_payload(processing_path, meta)
                         r = self.session.post(
                             self.endpoint,
                             json=data,
@@ -433,6 +473,12 @@ class Processor:
         if self.cfg.allowed_extensions:
             if path.suffix.lower() not in self.cfg.allowed_extensions:
                 logging.debug("ignored extension path=%s", path)
+                return False
+
+        if self.cfg.include_patterns:
+            name = path.name
+            if not any(fnmatch.fnmatch(name, pattern) for pattern in self.cfg.include_patterns):
+                logging.debug("ignored include_patterns path=%s patterns=%s", path, self.cfg.include_patterns)
                 return False
 
         if self.cfg.exclude_patterns:
